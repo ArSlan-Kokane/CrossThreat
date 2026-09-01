@@ -5,7 +5,9 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 
-def load_data(processed_dir="c:/CyberShield/crossthreat/data/processed"):
+def load_data(processed_dir=None):
+    if processed_dir is None:
+        processed_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "processed")
     with open(os.path.join(processed_dir, "metadata.pkl"), "rb") as f:
         metadata = pickle.load(f)
         
@@ -80,7 +82,9 @@ class CurrentStateClassifier:
     Mission 3: A wrapper around the trained baseline classifier that provides 
     reproducible classification of current network states from a single window.
     """
-    def __init__(self, processed_dir="c:/CyberShield/crossthreat/data/processed"):
+    def __init__(self, processed_dir=None):
+        if processed_dir is None:
+            processed_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "processed")
         with open(os.path.join(processed_dir, "baseline_model.pkl"), "rb") as f:
             self.model = pickle.load(f)
         with open(os.path.join(processed_dir, "metadata.pkl"), "rb") as f:

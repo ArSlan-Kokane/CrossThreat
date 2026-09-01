@@ -3,13 +3,19 @@ import pickle
 import pandas as pd
 import numpy as np
 import torch
-from data_pipeline import clean_data, aggregate_windows
-from temporal_model import HostSequenceDataset, TemporalWorldModel
+try:
+    from .data_pipeline import clean_data, aggregate_windows
+    from .temporal_model import HostSequenceDataset, TemporalWorldModel
+except ImportError:
+    from data_pipeline import clean_data, aggregate_windows
+    from temporal_model import HostSequenceDataset, TemporalWorldModel
 
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def generate_mock_2017_data(output_path="c:/CyberShield/crossthreat/data/raw/CIC-IDS2017.csv"):
+def generate_mock_2017_data(output_path=None):
+    if output_path is None:
+        output_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "raw", "CIC-IDS2017.csv")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
     # 2017 attack mix (e.g. PortScan, Web Attack, Benign)
@@ -91,7 +97,12 @@ def generate_mock_2017_data(output_path="c:/CyberShield/crossthreat/data/raw/CIC
     df.to_csv(output_path, index=False)
     print(f"Generated mock CIC-IDS2017 file at {output_path}")
 
-def run_generalization_test(processed_dir="c:/CyberShield/crossthreat/data/processed", raw_path="c:/CyberShield/crossthreat/data/raw/CIC-IDS2017.csv"):
+def run_generalization_test(processed_dir=None, raw_path=None):
+    project_dir = os.path.dirname(os.path.dirname(__file__))
+    if processed_dir is None:
+        processed_dir = os.path.join(project_dir, "data", "processed")
+    if raw_path is None:
+        raw_path = os.path.join(project_dir, "data", "raw", "CIC-IDS2017.csv")
     print("--- Running OOD Generalization Test (CIC-IDS2017) ---")
     
     if not os.path.exists(raw_path):

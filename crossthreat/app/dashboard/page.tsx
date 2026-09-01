@@ -9,7 +9,14 @@ interface FeatureImportance {
 
 interface TimelineStep {
   step: number;
-
+  timestamp: string;
+  ground_truth_label: string;
+  baseline_predicted_state: string;
+  baseline_probability: number;
+  baseline_shap: FeatureImportance[];
+  forecast_next_state: string;
+  forecast_probability: number;
+  forecast_lead_time: string;
   forecast_attribution: FeatureImportance[];
   mitre_stage: string;
   rule_stage: string;
@@ -31,6 +38,8 @@ interface GeneralizationResults {
   accuracy_delta: number;
   ood_sequences: number;
 }
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 export default function Dashboard() {
   const [hosts, setHosts] = useState<string[]>([]);
@@ -54,7 +63,7 @@ export default function Dashboard() {
 
   // Fetch host list and generalization results on load
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/replay/list")
+    fetch(`${API_BASE_URL}/api/replay/list`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load hosts list");
         return res.json();
@@ -65,24 +74,26 @@ export default function Dashboard() {
           setSelectedHost(data[0]);
         }
       })
-      .catch((err) => setError("FastAPI backend is offline or loading failed. Make sure server.py is running."));
+      .catch(() => setError("FastAPI backend is offline or loading failed. Make sure server.py is running."));
 
-    fetch("http://127.0.0.1:8000/api/generalization")
+    fetch(`${API_BASE_URL}/api/generalization`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load generalization data");
         return res.json();
       })
       .then((data) => setGenResults(data))
-      .catch((err) => console.log("Generalization results loading failed."));
+      .catch(() => console.log("Generalization results loading failed."));
   }, []);
 
   // Fetch replay data when selected host changes
   useEffect(() => {
     if (!selectedHost) return;
+    // Reset local replay state whenever the selected host changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsPlaying(false);
     setCurrentStepIndex(0);
     
-    fetch(`http://127.0.0.1:8000/api/replay/host/${selectedHost}`)
+    fetch(`${API_BASE_URL}/api/replay/host/${encodeURIComponent(selectedHost)}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load host sequence data");
         return res.json();
@@ -501,10 +512,10 @@ export default function Dashboard() {
               <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5 shadow-xl space-y-5">
                 <div>
                   <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-                    🔍 "Why" Panel (Feature Attribution)
+                    🔍 &quot;Why&quot; Panel (Feature Attribution)
                   </h3>
                   <p className="text-xs text-zinc-500 mt-1">
-                    Reveals which network traffic indicators are driving the model's predictions.
+                    Reveals which network traffic indicators are driving the model&apos;s predictions.
                   </p>
                 </div>
                 

@@ -10,7 +10,9 @@ class EvidenceEngine:
     Mission 5: Explains predictions from both the Baseline classifier (SHAP)
     and the Temporal LSTM model (Gradient-based sequence attribution).
     """
-    def __init__(self, processed_dir="c:/CyberShield/crossthreat/data/processed"):
+    def __init__(self, processed_dir=None):
+        if processed_dir is None:
+            processed_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "processed")
         self.processed_dir = processed_dir
         
         # Load metadata and scaler

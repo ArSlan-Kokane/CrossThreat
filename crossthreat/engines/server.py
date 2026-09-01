@@ -1,5 +1,7 @@
 import os
 import pickle
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 import torch
@@ -8,10 +10,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
 
-from baseline_model import CurrentStateClassifier
-from temporal_model import TemporalWorldModel
-from stage_mapper import StageMapper
-from evidence_engine import EvidenceEngine
+try:
+    from .baseline_model import CurrentStateClassifier
+    from .temporal_model import TemporalWorldModel
+    from .stage_mapper import StageMapper
+    from .evidence_engine import EvidenceEngine
+except ImportError:  # Supports running `python engines/server.py` directly.
+    from baseline_model import CurrentStateClassifier
+    from temporal_model import TemporalWorldModel
+    from stage_mapper import StageMapper
+    from evidence_engine import EvidenceEngine
 
 app = FastAPI(title="CrossThreat API Server", version="1.0.0")
 
@@ -24,22 +32,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-PROCESSED_DIR = "c:/CyberShield/crossthreat/data/processed"
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+PROCESSED_DIR = Path(os.getenv("CROSSTHREAT_PROCESSED_DIR", PROJECT_DIR / "data" / "processed"))
 
 # Load global resources
-with open(os.path.join(PROCESSED_DIR, "metadata.pkl"), "rb") as f:
+with open(PROCESSED_DIR / "metadata.pkl", "rb") as f:
     metadata = pickle.load(f)
 feature_cols = metadata['feature_cols']
 label_map = metadata['label_mapping']
 inv_label_map = {v: k for k, v in label_map.items()}
 
 # Initialize engines
-current_classifier = CurrentStateClassifier()
+current_classifier = CurrentStateClassifier(processed_dir=str(PROCESSED_DIR))
 stage_mapper = StageMapper(feature_cols)
-evidence_engine = EvidenceEngine()
+evidence_engine = EvidenceEngine(processed_dir=str(PROCESSED_DIR))
 
 # Initialize LSTM
-with open(os.path.join(PROCESSED_DIR, "temporal_model_dims.pkl"), "rb") as f:
+with open(PROCESSED_DIR / "temporal_model_dims.pkl", "rb") as f:
     dims = pickle.load(f)
 
 lstm_model = TemporalWorldModel(
@@ -47,7 +56,7 @@ lstm_model = TemporalWorldModel(
     hidden_dim=dims['hidden_dim'],
     num_classes=dims['num_classes']
 )
-lstm_model.load_state_dict(torch.load(os.path.join(PROCESSED_DIR, "temporal_model.pth"), map_location=torch.device('cpu')))
+lstm_model.load_state_dict(torch.load(PROCESSED_DIR / "temporal_model.pth", map_location=torch.device("cpu")))
 lstm_model.eval()
 
 class GeneralizationResult(BaseModel):
@@ -56,15 +65,22 @@ class GeneralizationResult(BaseModel):
     accuracy_delta: float
     ood_sequences: int
 
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "processed_dir": str(PROCESSED_DIR)}
+
 @app.get("/api/generalization", response_model=GeneralizationResult)
 def get_generalization():
-    path = os.path.join(PROCESSED_DIR, "generalization_results.pkl")
-    if not os.path.exists(path):
-        # Run test dynamically if file doesn't exist
-        from generalization_test import run_generalization_test
-        run_generalization_test()
+    path = PROCESSED_DIR / "generalization_results.pkl"
+    if not path.exists():
+        # Run test dynamically if file doesn't exist.
+        try:
+            from .generalization_test import run_generalization_test
+        except ImportError:
+            from generalization_test import run_generalization_test
+        run_generalization_test(processed_dir=str(PROCESSED_DIR))
     
-    if not os.path.exists(path):
+    if not path.exists():
         raise HTTPException(status_code=500, detail="Generalization test results could not be found.")
         
     with open(path, "rb") as f:
@@ -73,17 +89,19 @@ def get_generalization():
 
 @app.get("/api/replay/list", response_model=List[str])
 def get_replay_hosts():
-    test_df = pd.read_pickle(os.path.join(PROCESSED_DIR, "test_windows.pkl"))
+    test_df = pd.read_pickle(PROCESSED_DIR / "test_windows.pkl")
     # Return hosts sorted by unique labels (prioritize hosts with more attack types)
-    hosts_by_attacks = test_df.groupby('Src IP')['Label'].nunique().sort_values(ascending=False).index.tolist()
+    host_column = "Host" if "Host" in test_df.columns else "Src IP"
+    hosts_by_attacks = test_df.groupby(host_column)["Label"].nunique().sort_values(ascending=False).index.astype(str).tolist()
     return hosts_by_attacks
 
 @app.get("/api/replay/host/{host_ip}")
 def get_host_sequence(host_ip: str):
-    test_df = pd.read_pickle(os.path.join(PROCESSED_DIR, "test_windows.pkl"))
+    test_df = pd.read_pickle(PROCESSED_DIR / "test_windows.pkl")
     
     # Filter for host and sort chronologically
-    host_windows = test_df[test_df['Host'] == host_ip].sort_values('TimeWindow')
+    host_column = "Host" if "Host" in test_df.columns else "Src IP"
+    host_windows = test_df[test_df[host_column].astype(str) == str(host_ip)].sort_values("TimeWindow")
     
     if len(host_windows) < 6: # Need at least N=5 history + 1 target
         raise HTTPException(status_code=400, detail="Not enough sequence history (minimum 6 windows required) for this host.")
@@ -91,7 +109,7 @@ def get_host_sequence(host_ip: str):
     # Scale features
     X_scaled = host_windows[feature_cols].values.astype(np.float32)
     labels = host_windows['Label'].values
-    timestamps = host_windows['TimeWindow'].dt.strftime("%H:%M:%S").values
+    timestamps = pd.to_datetime(host_windows["TimeWindow"]).dt.strftime("%H:%M:%S").values
     
     # We will build sequences step-by-step
     seq_len = 5
