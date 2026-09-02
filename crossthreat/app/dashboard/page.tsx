@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { apiClient } from "@/lib/api";
 
 interface FeatureImportance {
   feature: string;
@@ -39,8 +40,6 @@ interface GeneralizationResults {
   ood_sequences: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
-
 export default function Dashboard() {
   const [hosts, setHosts] = useState<string[]>([]);
   const [selectedHost, setSelectedHost] = useState<string>("");
@@ -58,55 +57,88 @@ export default function Dashboard() {
   // UI toggles
   const [showBaseline, setShowBaseline] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [isApiHealthy, setIsApiHealthy] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Check API health on mount
+  useEffect(() => {
+    const checkApiHealth = async () => {
+      try {
+        await apiClient.checkHealth();
+        setIsApiHealthy(true);
+        setError("");
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setIsApiHealthy(false);
+        setError(`Backend Connection Error: ${errorMsg}`);
+      }
+    };
+
+    checkApiHealth();
+  }, []);
+
   // Fetch host list and generalization results on load
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/replay/list`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load hosts list");
-        return res.json();
-      })
-      .then((data) => {
-        setHosts(data);
-        if (data.length > 0) {
-          setSelectedHost(data[0]);
+    const loadInitialData = async () => {
+      setIsLoading(true);
+      
+      try {
+        // Load hosts
+        const hostData = await apiClient.getReplayList();
+        setHosts(hostData);
+        
+        if (hostData.length > 0) {
+          setSelectedHost(hostData[0]);
+        } else {
+          setError("No hosts available in dataset.");
         }
-      })
-      .catch(() => setError("FastAPI backend is offline or loading failed. Make sure server.py is running."));
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setError(`Failed to load hosts: ${errorMsg}`);
+        setIsApiHealthy(false);
+      }
 
-    fetch(`${API_BASE_URL}/api/generalization`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load generalization data");
-        return res.json();
-      })
-      .then((data) => setGenResults(data))
-      .catch(() => console.log("Generalization results loading failed."));
-  }, []);
+      try {
+        // Load generalization results
+        const genData = await apiClient.getGeneralization();
+        setGenResults(genData);
+      } catch (err) {
+        console.warn("Generalization results loading skipped:", err);
+        // Don't fail the whole page if generalization fails
+      }
+
+      setIsLoading(false);
+    };
+
+    if (isApiHealthy) {
+      loadInitialData();
+    }
+  }, [isApiHealthy]);
 
   // Fetch replay data when selected host changes
   useEffect(() => {
-    if (!selectedHost) return;
+    if (!selectedHost || !isApiHealthy) return;
+    
     // Reset local replay state whenever the selected host changes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsPlaying(false);
     setCurrentStepIndex(0);
+    setError("");
     
-    fetch(`${API_BASE_URL}/api/replay/host/${encodeURIComponent(selectedHost)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load host sequence data");
-        return res.json();
-      })
-      .then((data) => {
+    const loadHostSequence = async () => {
+      try {
+        const data = await apiClient.getHostSequence(selectedHost, 60);
         setReplayData(data);
-        setError("");
-      })
-      .catch((err) => {
-        setError(`Error loading replay data for host ${selectedHost}: ${err.message}`);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        setError(`Error loading replay data: ${errorMsg}`);
         setReplayData(null);
-      });
-  }, [selectedHost]);
+      }
+    };
+
+    loadHostSequence();
+  }, [selectedHost, isApiHealthy]);
 
   // Handle playback interval timer
   useEffect(() => {
@@ -165,6 +197,52 @@ export default function Dashboard() {
   };
 
   const currentStep = replayData?.steps[currentStepIndex];
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-6 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin h-12 w-12 border-4 border-zinc-700 border-t-rose-500 rounded-full mx-auto"></div>
+          <p className="text-zinc-400">Initializing dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if API is not healthy
+  if (!isApiHealthy) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-6">
+        <div className="max-w-2xl mx-auto space-y-6 pt-20">
+          <div className="text-center space-y-4">
+            <div className="text-6xl">⚠️</div>
+            <h1 className="text-3xl font-bold text-rose-400">Backend Connection Failed</h1>
+            <p className="text-zinc-400 text-lg">{error}</p>
+          </div>
+
+          <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-6 space-y-4">
+            <h2 className="font-bold text-zinc-200">Troubleshooting Steps:</h2>
+            <ol className="text-zinc-400 space-y-2 text-sm list-decimal list-inside">
+              <li>Ensure the FastAPI backend is running:
+                <code className="block bg-zinc-950 p-2 rounded mt-1 text-xs font-mono">npm run api</code>
+              </li>
+              <li>Check that the backend is listening on <code className="text-zinc-300">http://127.0.0.1:8000</code></li>
+              <li>Verify <code className="text-zinc-300">data/processed</code> directory exists with model artifacts</li>
+              <li>Check environment variable <code className="text-zinc-300">NEXT_PUBLIC_API_URL</code> if using custom backend URL</li>
+            </ol>
+          </div>
+
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-lg transition"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-6">
@@ -675,12 +753,12 @@ export default function Dashboard() {
                 
                 <p className="text-zinc-400 leading-relaxed">
                   The model was trained on partitioned temporal subsets from **CSE-CIC-IDS2018** (Days 1-7). 
-                  To test whether the model merely memorized traffic signatures or generalized to broader structures, we ran evaluation passes over **CIC-IDS2017**, which features a completely separate network mix and different attack intervals.
+                  To test whether the model merely memorized traffic signatures or generalized to broader structures, we ran evaluation passes over **CIC-IDS2017**, which features a completely separate attack campaign and network topology.
                 </p>
 
                 <div className="border-t border-zinc-800/60 pt-3 text-xs text-zinc-500 space-y-2">
                   <p>
-                    • **Total OOD sequence sequences evaluated:**{" "}
+                    • **Total OOD sequences evaluated:**{" "}
                     <span className="font-bold text-zinc-300">{genResults.ood_sequences} sequences</span>
                   </p>
                   <p>
