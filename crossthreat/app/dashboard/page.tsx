@@ -117,27 +117,37 @@ export default function Dashboard() {
     }
   }, [isApiHealthy]);
 
+  const handleHostChange = (newHost: string) => {
+    setIsPlaying(false);
+    setCurrentStepIndex(0);
+    setError("");
+    setSelectedHost(newHost);
+  };
+
   // Fetch replay data when selected host changes
   useEffect(() => {
     if (!selectedHost || !isApiHealthy) return;
     
-    // Reset local replay state whenever the selected host changes.
-    setIsPlaying(false);
-    setCurrentStepIndex(0);
-    setError("");
-    
+    let isMounted = true;
     const loadHostSequence = async () => {
       try {
         const data = await apiClient.getHostSequence(selectedHost, 60);
-        setReplayData(data);
+        if (isMounted) {
+          setReplayData(data);
+        }
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        setError(`Error loading replay data: ${errorMsg}`);
-        setReplayData(null);
+        if (isMounted) {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          setError(`Error loading replay data: ${errorMsg}`);
+          setReplayData(null);
+        }
       }
     };
 
     loadHostSequence();
+    return () => {
+      isMounted = false;
+    };
   }, [selectedHost, isApiHealthy]);
 
   // Handle playback interval timer
@@ -307,7 +317,7 @@ export default function Dashboard() {
                   <label className="text-xs text-zinc-400 font-medium">Target Host:</label>
                   <select
                     value={selectedHost}
-                    onChange={(e) => setSelectedHost(e.target.value)}
+                    onChange={(e) => handleHostChange(e.target.value)}
                     className="bg-zinc-900 border border-zinc-800 text-zinc-100 text-sm rounded-lg focus:ring-rose-500 focus:border-rose-500 p-2.5 outline-none min-w-[180px]"
                   >
                     {hosts.map((host) => (
@@ -575,7 +585,7 @@ export default function Dashboard() {
                     </span>
                   </div>
                   {/* Probability Bar */}
-                  <div className="w-full bg-zinc-850 h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
                     <div
                       className="bg-indigo-500 h-full rounded-full transition-all duration-500"
                       style={{ width: `${currentStep.forecast_probability * 100}%` }}
@@ -614,7 +624,7 @@ export default function Dashboard() {
                             <span className="text-zinc-400">{attr.feature}</span>
                             <span className="text-zinc-500">{attr.value.toFixed(4)}</span>
                           </div>
-                          <div className="w-full bg-zinc-850 h-1 rounded-full overflow-hidden">
+                          <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
                             <div
                               className="bg-indigo-400 h-full rounded-full transition-all"
                               style={{ width: `${pct}%` }}
@@ -643,7 +653,7 @@ export default function Dashboard() {
                               <span className="text-zinc-400">{attr.feature}</span>
                               <span className="text-zinc-500">{attr.value.toFixed(4)}</span>
                             </div>
-                            <div className="w-full bg-zinc-850 h-1 rounded-full overflow-hidden">
+                            <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
                               <div
                                 className="bg-amber-400 h-full rounded-full transition-all"
                                 style={{ width: `${pct}%` }}
@@ -748,7 +758,7 @@ export default function Dashboard() {
               </div>
 
               {/* Assessment details */}
-              <div className="bg-zinc-950/50 border border-zinc-850 p-5 rounded-lg text-sm space-y-4">
+              <div className="bg-zinc-950/50 border border-zinc-800 p-5 rounded-lg text-sm space-y-4">
                 <h3 className="font-bold text-zinc-300">🔍 Generalization Assessment Report</h3>
                 
                 <p className="text-zinc-400 leading-relaxed">

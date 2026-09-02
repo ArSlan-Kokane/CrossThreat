@@ -71,7 +71,7 @@ def generate_mock_2017_data(output_path=None):
         syn_flag = int(np.random.choice([0, 1]))
         ack_flag = int(np.random.choice([0, 1]))
         psh_flag = int(np.random.choice([0, 1]))
-        rst_flag = int(np.random.choice([0, 1]) if label != "Benign" else [0])
+        rst_flag = int(np.random.choice([0, 1])) if label != "Benign" else 0
         
         records.append({
             "Timestamp": timestamp_str,
@@ -155,7 +155,7 @@ def run_generalization_test(processed_dir=None, raw_path=None):
         print("Error: Trained temporal model not found. Run training first.")
         return
         
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     
     # Evaluate

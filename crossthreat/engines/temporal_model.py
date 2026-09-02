@@ -1,5 +1,6 @@
 import os
 import pickle
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import torch
@@ -10,6 +11,9 @@ from torch.utils.data import Dataset, DataLoader
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_PROCESSED_DIR = PROJECT_DIR / "data" / "processed"
+
 class HostSequenceDataset(Dataset):
     """
     Groups time windows by host, sorts chronologically, and builds sliding sequences.
@@ -19,8 +23,9 @@ class HostSequenceDataset(Dataset):
         self.sequences = []
         self.targets = []
         
-        # Group by host
-        grouped = df.groupby('Host')
+        # Group by host (support both 'Host' and 'Src IP' column names)
+        host_col = 'Host' if 'Host' in df.columns else 'Src IP'
+        grouped = df.groupby(host_col)
         
         for host, group in grouped:
             # Sort by TimeWindow
@@ -73,11 +78,8 @@ class TemporalWorldModel(nn.Module):
         
     def forward(self, x):
         # x shape: (batch_size, seq_len, input_dim)
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_dim).to(device)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_dim).to(device)
-        
-        # Forward pass through LSTM
-        out, _ = self.lstm(x, (h0, c0))
+        # LSTM automatically initializes (h_0, c_0) on the same device as x
+        out, _ = self.lstm(x)
         # out shape: (batch_size, seq_len, hidden_dim)
         
         # Take the output of the last sequence step
@@ -88,12 +90,15 @@ class TemporalWorldModel(nn.Module):
         out = self.fc(out)
         return out
 
-def train_temporal(processed_dir="c:/CyberShield/crossthreat/data/processed", epochs=8, batch_size=32):
+def train_temporal(processed_dir=None, epochs=8, batch_size=32):
+    if processed_dir is None:
+        processed_dir = DEFAULT_PROCESSED_DIR
+    processed_dir = Path(processed_dir)
     print("--- Training Temporal World Model (LSTM) ---")
     
     # Load processed data
-    train_df = pd.read_pickle(os.path.join(processed_dir, "train_windows.pkl"))
-    test_df = pd.read_pickle(os.path.join(processed_dir, "test_windows.pkl"))
+    train_df = pd.read_pickle(processed_dir / "train_windows.pkl")
+    test_df = pd.read_pickle(processed_dir / "test_windows.pkl")
     
     with open(os.path.join(processed_dir, "metadata.pkl"), "rb") as f:
         metadata = pickle.load(f)

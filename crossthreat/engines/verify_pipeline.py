@@ -1,39 +1,53 @@
 import os
 import pickle
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import torch
-from mock_data_generator import generate_mock_data
-from data_pipeline import run_pipeline
-from baseline_model import train_baseline, CurrentStateClassifier
-from temporal_model import train_temporal, TemporalWorldModel
-from stage_mapper import StageMapper
-from evidence_engine import EvidenceEngine
+
+try:
+    from .mock_data_generator import generate_mock_data
+    from .data_pipeline import run_pipeline
+    from .baseline_model import train_baseline, CurrentStateClassifier
+    from .temporal_model import train_temporal, TemporalWorldModel
+    from .stage_mapper import StageMapper
+    from .evidence_engine import EvidenceEngine
+except ImportError:
+    from mock_data_generator import generate_mock_data
+    from data_pipeline import run_pipeline
+    from baseline_model import train_baseline, CurrentStateClassifier
+    from temporal_model import train_temporal, TemporalWorldModel
+    from stage_mapper import StageMapper
+    from evidence_engine import EvidenceEngine
+
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_PROCESSED_DIR = PROJECT_DIR / "data" / "processed"
+DEFAULT_RAW_DIR = PROJECT_DIR / "data" / "raw"
 
 def main():
     print("=========================================")
-    print("=== CYBERSHIELD END-TO-END VERIFICATION ===")
+    print("=== CROSSTHREAT END-TO-END VERIFICATION ===")
     print("=========================================\n")
     
     # 1. Generate mock data
     print("[Step 1] Generating mock dataset...")
-    generate_mock_data()
+    generate_mock_data(output_dir=DEFAULT_RAW_DIR)
     
     # 2. Run data pipeline
     print("\n[Step 2] Running data pipeline...")
-    run_pipeline()
+    run_pipeline(raw_dir=DEFAULT_RAW_DIR, processed_dir=DEFAULT_PROCESSED_DIR)
     
     # 3. Train baseline classifier (Mission 2 & 3)
     print("\n[Step 3] Training baseline Random Forest classifier...")
-    train_baseline()
+    train_baseline(processed_dir=DEFAULT_PROCESSED_DIR)
     
     # 4. Train temporal world model (Mission 4)
     print("\n[Step 4] Training temporal LSTM forecaster...")
-    train_temporal(epochs=3) # Keep epochs small for verification speed
+    train_temporal(processed_dir=DEFAULT_PROCESSED_DIR, epochs=3) # Keep epochs small for verification speed
     
     # 5. Check output files existence
     print("\n[Step 5] Checking output files...")
-    processed_dir = "c:/CyberShield/crossthreat/data/processed"
+    processed_dir = DEFAULT_PROCESSED_DIR
     files = [
         "train_windows.pkl",
         "test_windows.pkl",
@@ -96,14 +110,14 @@ def main():
         hidden_dim=dims['hidden_dim'],
         num_classes=dims['num_classes']
     )
-    lstm_model.load_state_dict(torch.load(os.path.join(processed_dir, "temporal_model.pth")))
+    lstm_model.load_state_dict(torch.load(os.path.join(processed_dir, "temporal_model.pth"), map_location=torch.device("cpu")))
     lstm_model.eval()
     
     # Create a mock host sequence of shape (seq_len, num_features)
     seq_len = 5
     mock_seq = np.random.randn(seq_len, len(feature_cols)).astype(np.float32)
     
-    evidence_engine = EvidenceEngine()
+    evidence_engine = EvidenceEngine(processed_dir=str(processed_dir))
     
     # Get LSTM Forecast and Attribution
     attribution, forecast_label, forecast_prob = evidence_engine.explain_temporal(
@@ -122,7 +136,7 @@ def main():
         print(f"    - {feat}: {score:.6f}")
         
     print("\n=========================================")
-    print("=== CYBERSHIELD VERIFICATION SUCCESSFUL ===")
+    print("=== CROSSTHREAT VERIFICATION SUCCESSFUL ===")
     print("=========================================")
 
 if __name__ == "__main__":

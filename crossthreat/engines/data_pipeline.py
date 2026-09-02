@@ -1,9 +1,13 @@
 import os
-import glob
+import pickle
+from pathlib import Path
 import pandas as pd
 import numpy as np
-import pickle
 from sklearn.preprocessing import StandardScaler
+
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_RAW_DIR = PROJECT_DIR / "data" / "raw"
+DEFAULT_PROCESSED_DIR = PROJECT_DIR / "data" / "processed"
 
 def clean_data(df):
     # Strip whitespace from column names
@@ -13,7 +17,9 @@ def clean_data(df):
     df = df.replace([np.inf, -np.inf], np.nan)
     
     # Drop rows with NaN in critical columns (like IP or Timestamp)
-    df = df.dropna(subset=['Timestamp', 'Src IP', 'Dst IP'])
+    critical_cols = [c for c in ['Timestamp', 'Src IP', 'Dst IP'] if c in df.columns]
+    if critical_cols:
+        df = df.dropna(subset=critical_cols)
     
     # Fill remaining NaNs with 0
     df = df.fillna(0)
@@ -29,9 +35,13 @@ def clean_data(df):
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
             
-    # Parse Timestamp
-    df['Timestamp'] = pd.to_datetime(df['Timestamp'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
-    df = df.dropna(subset=['Timestamp'])
+    # Parse Timestamp robustly (support day-first and ISO formats)
+    if 'Timestamp' in df.columns:
+        parsed_ts = pd.to_datetime(df['Timestamp'], format='%d/%m/%Y %H:%M:%S', errors='coerce')
+        if parsed_ts.isna().all():
+            parsed_ts = pd.to_datetime(df['Timestamp'], errors='coerce', dayfirst=True)
+        df['Timestamp'] = parsed_ts
+        df = df.dropna(subset=['Timestamp'])
     
     return df
 
@@ -97,7 +107,13 @@ def aggregate_windows(df, window_size='30s'):
         
     return pd.DataFrame(agg_features)
 
-def run_pipeline(raw_dir="c:/CyberShield/crossthreat/data/raw", processed_dir="c:/CyberShield/crossthreat/data/processed"):
+def run_pipeline(raw_dir=None, processed_dir=None):
+    if raw_dir is None:
+        raw_dir = DEFAULT_RAW_DIR
+    if processed_dir is None:
+        processed_dir = DEFAULT_PROCESSED_DIR
+    raw_dir = Path(raw_dir)
+    processed_dir = Path(processed_dir)
     os.makedirs(processed_dir, exist_ok=True)
     
     # Train days (1-7)
@@ -115,7 +131,7 @@ def run_pipeline(raw_dir="c:/CyberShield/crossthreat/data/raw", processed_dir="c
     def process_file_list(files):
         all_dfs = []
         for file in files:
-            path = os.path.join(raw_dir, file)
+            path = raw_dir / file
             if os.path.exists(path):
                 print(f"Loading {path}...")
                 df = pd.read_csv(path)

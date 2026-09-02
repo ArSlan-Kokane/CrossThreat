@@ -16,9 +16,9 @@ def load_data(processed_dir=None):
     
     return train_df, test_df, metadata
 
-def train_baseline():
+def train_baseline(processed_dir=None):
     print("--- Training Baseline Classifier (Random Forest) ---")
-    train_df, test_df, metadata = load_data()
+    train_df, test_df, metadata = load_data(processed_dir=processed_dir)
     
     feature_cols = metadata['feature_cols']
     label_map = metadata['label_mapping']
@@ -68,7 +68,9 @@ def train_baseline():
         print(f"  {label_name}: {fpr:.4f}")
         
     # Save the model
-    model_path = "c:/CyberShield/crossthreat/data/processed/baseline_model.pkl"
+    if processed_dir is None:
+        processed_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "processed")
+    model_path = os.path.join(processed_dir, "baseline_model.pkl")
     with open(model_path, "wb") as f:
         pickle.dump(clf, f)
     print(f"\nModel saved to {model_path}")
@@ -80,7 +82,7 @@ def train_baseline():
 class CurrentStateClassifier:
     """
     Mission 3: A wrapper around the trained baseline classifier that provides 
-    reproducible classification of current network states from a single window.
+    reproducible classification of current network states from single or batch windows.
     """
     def __init__(self, processed_dir=None):
         if processed_dir is None:
@@ -113,7 +115,8 @@ class CurrentStateClassifier:
                 X = X.reshape(1, -1)
                 
         # Scale
-        X_scaled = self.scaler.transform(X)
+        X_df = pd.DataFrame(X, columns=self.feature_cols) if not isinstance(X, pd.DataFrame) else X
+        X_scaled = self.scaler.transform(X_df)
         
         # Predict
         class_idx = self.model.predict(X_scaled)[0]
@@ -129,6 +132,23 @@ class CurrentStateClassifier:
             "class_idx": int(class_idx),
             "probabilities": prob_dist
         }
+
+    def predict_states_batch_scaled(self, X_scaled):
+        """
+        Batch prediction directly on already-scaled numpy array (N, num_features).
+        Returns list of (state_label, max_prob, prob_dict).
+        """
+        preds = self.model.predict(X_scaled)
+        probas = self.model.predict_proba(X_scaled)
+        
+        results = []
+        for i in range(len(preds)):
+            class_idx = preds[i]
+            state_label = self.inv_label_map[class_idx]
+            prob_dist = {self.inv_label_map[c]: float(p) for c, p in enumerate(probas[i])}
+            max_p = float(probas[i][class_idx])
+            results.append((state_label, max_p, prob_dist))
+        return results
 
 if __name__ == "__main__":
     train_baseline()

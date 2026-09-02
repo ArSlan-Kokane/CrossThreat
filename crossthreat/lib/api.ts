@@ -176,35 +176,3 @@ export const apiClient = {
     return await response.json();
   },
 };
-
-/**
- * Hook to manage API state and errors in React components
- */
-export function useApi<T>(
-  fetchFn: () => Promise<T>,
-  errorCallback?: (error: Error) => void
-) {
-  const [data, setData] = React.useState<T | null>(null);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
-
-  const execute = React.useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await fetchFn();
-      setData(result);
-      return result;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-      errorCallback?.(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchFn, errorCallback]);
-
-  return { data, loading, error, execute };
-}

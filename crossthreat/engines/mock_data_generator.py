@@ -1,9 +1,16 @@
 import os
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-def generate_mock_data(output_dir="c:/CyberShield/crossthreat/data/raw"):
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_RAW_DIR = PROJECT_DIR / "data" / "raw"
+
+def generate_mock_data(output_dir=None):
+    if output_dir is None:
+        output_dir = DEFAULT_RAW_DIR
+    output_dir = Path(output_dir)
     os.makedirs(output_dir, exist_ok=True)
     
     # 10 days structure matching CSE-CIC-IDS2018

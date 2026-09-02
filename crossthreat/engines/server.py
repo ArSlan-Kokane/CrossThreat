@@ -217,58 +217,68 @@ async def get_host_sequence(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid host identifier: {str(e)}")
     
-    async def compute_sequence():
+    def compute_sequence():
         test_df = pd.read_pickle(PROCESSED_DIR / "test_windows.pkl")
         
         # Filter for host and sort chronologically
         host_column = "Host" if "Host" in test_df.columns else "Src IP"
         host_windows = test_df[test_df[host_column].astype(str) == str(host_ip)].sort_values("TimeWindow")
         
-        if len(host_windows) < 6: # Need at least N=5 history + 1 target
-            raise HTTPException(status_code=400, detail="Not enough sequence history (minimum 6 windows required) for this host.")
+        seq_len = 5
+        num_windows = len(host_windows)
+        if num_windows < seq_len + 1:  # Need at least N=5 history + 1 target
+            raise HTTPException(
+                status_code=400, 
+                detail="Not enough sequence history (minimum 6 windows required) for this host."
+            )
             
-        # Scale features
+        # Scaled features & metadata
         X_scaled = host_windows[feature_cols].values.astype(np.float32)
         labels = host_windows['Label'].values
         timestamps = pd.to_datetime(host_windows["TimeWindow"]).dt.strftime("%H:%M:%S").values
         
-        # We will build sequences step-by-step
-        seq_len = 5
-        timeline_steps = []
+        # Target windows starting from seq_len
+        target_X_scaled = X_scaled[seq_len:]
+        num_target_steps = len(target_X_scaled)
         
-        # For each step from idx seq_len onwards
-        for t in range(seq_len, len(host_windows)):
+        # 1. Vectorized Inverse Scaling for raw feature metrics and rules
+        target_raw_rows = evidence_engine.scaler.inverse_transform(target_X_scaled)
+        
+        # 2. Vectorized Baseline Predictions
+        baseline_results = current_classifier.predict_states_batch_scaled(target_X_scaled)
+        
+        # 3. Vectorized Baseline SHAP attributions
+        baseline_shap_all = evidence_engine.explain_baseline_batch(target_X_scaled)
+        
+        # 4. Vectorized LSTM Sequences & Temporal Gradient Attributions
+        sequences_np = np.array([
+            X_scaled[t - seq_len : t] for t in range(seq_len, num_windows)
+        ], dtype=np.float32)
+        
+        lstm_attributions_all, forecast_labels, forecast_probs = evidence_engine.explain_temporal_batch(
+            lstm_model, sequences_np
+        )
+        
+        # 5. Assemble Timeline Steps
+        timeline_steps = []
+        for i in range(num_target_steps):
+            t = i + seq_len
             current_time = timestamps[t]
             current_label = labels[t]
+            raw_row = target_raw_rows[i]
+            raw_row_dict = {col: float(raw_row[j]) for j, col in enumerate(feature_cols)}
             
-            # Raw features of the current window
-            scaled_row = X_scaled[t].reshape(1, -1)
-            raw_row = evidence_engine.scaler.inverse_transform(scaled_row)[0]
-            raw_row_dict = {col: float(raw_row[i]) for i, col in enumerate(feature_cols)}
+            baseline_pred, baseline_prob, _ = baseline_results[i]
+            baseline_shap_top = [{"feature": f, "value": v} for f, v in baseline_shap_all[i][:5]]
             
-            # 1. Baseline Model (Mission 2 & 3)
-            baseline_res = current_classifier.predict_state(raw_row)
-            baseline_pred = baseline_res["state"]
-            baseline_prob = baseline_res["probabilities"][baseline_pred]
+            forecast_label = forecast_labels[i]
+            forecast_prob = forecast_probs[i]
+            lstm_attributions_top = [{"feature": f, "value": v} for f, v in lstm_attributions_all[i][:5]]
             
-            # Baseline SHAP attributions
-            baseline_shap = evidence_engine.explain_baseline(raw_row)
-            baseline_shap_top = [{"feature": f, "value": v} for f, v in baseline_shap[:5]]
-            
-            # 2. Temporal Forecast Model (Mission 4)
-            input_seq = X_scaled[t-seq_len : t] # Shape: (5, 16)
-            
-            # LSTM prediction and gradient attribution
-            lstm_attributions, forecast_label, forecast_prob = evidence_engine.explain_temporal(
-                lstm_model, input_seq
-            )
-            lstm_attributions_top = [{"feature": f, "value": v} for f, v in lstm_attributions[:5]]
-            
-            # 3. Stage Mapping (Mission 5)
             stage_res = stage_mapper.resolve_stage(baseline_pred, raw_row)
             
             timeline_steps.append({
-                "step": t - seq_len + 1,
+                "step": i + 1,
                 "timestamp": current_time,
                 "ground_truth_label": current_label,
                 
@@ -309,7 +319,7 @@ async def get_host_sequence(
     except asyncio.TimeoutError:
         raise HTTPException(
             status_code=504,
-            detail=f"Processing timeout: host sequence computation exceeded {timeout_seconds}s. Try increasing timeout_seconds parameter."
+            detail=f"Processing timeout: host sequence computation exceeded {timeout_seconds}s."
         )
     except HTTPException:
         raise
