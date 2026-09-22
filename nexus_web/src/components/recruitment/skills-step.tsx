@@ -217,6 +217,32 @@ export function SkillsStep({ data, onChange, errors }: SkillsStepProps) {
             <p className="text-red-400 text-sm mt-1">{errors.linkedinUrl}</p>
           )}
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Other Skills (Optional)
+          </label>
+          <textarea
+            value={data.otherSkills || ""}
+            onChange={(e) => handleChange('otherSkills', e.target.value)}
+            rows={3}
+            className="w-full bg-[#12121a] border border-[#1a1a2e] rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#4f9eff] transition-colors resize-none"
+            placeholder="Any other skills not mentioned above..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Certifications (Optional)
+          </label>
+          <textarea
+            value={data.certifications || ""}
+            onChange={(e) => handleChange('certifications', e.target.value)}
+            rows={3}
+            className="w-full bg-[#12121a] border border-[#1a1a2e] rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#4f9eff] transition-colors resize-none"
+            placeholder="Any certifications or courses you've completed..."
+          />
+        </div>
       </div>
     </div>
   );

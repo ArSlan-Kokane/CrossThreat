@@ -100,6 +100,32 @@ export function MotivationStep({ data, onChange, errors }: MotivationStepProps) 
         </p>
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Biggest Challenges You've Overcome (Optional)
+        </label>
+        <textarea
+          value={data.challenges || ""}
+          onChange={(e) => handleChange('challenges', e.target.value)}
+          rows={3}
+          className="w-full bg-[#12121a] border border-[#1a1a2e] rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#4f9eff] transition-colors resize-none"
+          placeholder="Describe a significant challenge you've overcome and what you learned from it..."
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Your Goals for the Next Year (Optional)
+        </label>
+        <textarea
+          value={data.goals || ""}
+          onChange={(e) => handleChange('goals', e.target.value)}
+          rows={3}
+          className="w-full bg-[#12121a] border border-[#1a1a2e] rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#4f9eff] transition-colors resize-none"
+          placeholder="What are your personal and professional goals for the upcoming year..."
+        />
+      </div>
+
       <div className="bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg p-4">
         <h4 className="text-white font-semibold mb-2">Tips for Great Responses:</h4>
         <ul className="text-sm text-gray-400 space-y-1">

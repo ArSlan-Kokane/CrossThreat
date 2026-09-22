@@ -180,10 +180,13 @@ export function sanitizeFormData(formData: RecruitmentFormData): RecruitmentForm
       phone: sanitizeInput(formData.personalInfo.phone),
       branch: sanitizeInput(formData.personalInfo.branch),
       studentId: sanitizeInput(formData.personalInfo.studentId),
+      city: formData.personalInfo.city ? sanitizeInput(formData.personalInfo.city) : undefined,
+      state: formData.personalInfo.state ? sanitizeInput(formData.personalInfo.state) : undefined,
     },
     departmentInterest: {
       ...formData.departmentInterest,
       reason: sanitizeInput(formData.departmentInterest.reason),
+      relevantExperience: formData.departmentInterest.relevantExperience ? sanitizeInput(formData.departmentInterest.relevantExperience) : undefined,
     },
     skills: {
       ...formData.skills,
@@ -193,12 +196,16 @@ export function sanitizeFormData(formData: RecruitmentFormData): RecruitmentForm
       portfolioUrl: formData.skills.portfolioUrl ? sanitizeInput(formData.skills.portfolioUrl) : undefined,
       githubUrl: formData.skills.githubUrl ? sanitizeInput(formData.skills.githubUrl) : undefined,
       linkedinUrl: formData.skills.linkedinUrl ? sanitizeInput(formData.skills.linkedinUrl) : undefined,
+      otherSkills: formData.skills.otherSkills ? sanitizeInput(formData.skills.otherSkills) : undefined,
+      certifications: formData.skills.certifications ? sanitizeInput(formData.skills.certifications) : undefined,
     },
     responses: {
       whyJoin: sanitizeInput(formData.responses.whyJoin),
       contribution: sanitizeInput(formData.responses.contribution),
       timeCommitment: sanitizeInput(formData.responses.timeCommitment),
       otherActivities: formData.responses.otherActivities ? sanitizeInput(formData.responses.otherActivities) : undefined,
+      challenges: formData.responses.challenges ? sanitizeInput(formData.responses.challenges) : undefined,
+      goals: formData.responses.goals ? sanitizeInput(formData.responses.goals) : undefined,
     },
     resumeUrl: formData.resumeUrl,
   };

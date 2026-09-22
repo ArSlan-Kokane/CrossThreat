@@ -44,13 +44,12 @@ export function RecruitmentCallout() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             {recruitment.isOpen && (
               <Button
-                href={recruitment.googleFormUrl}
-                external
+                href="/recruitment"
                 size="lg"
                 variant="primary"
                 className="w-full sm:w-auto h-14 px-8 text-sm font-semibold"
               >
-                <span>Submit Google Form Application</span>
+                <span>Apply Now</span>
                 <ArrowUpRight className="h-4 w-4 ml-2" />
               </Button>
             )}

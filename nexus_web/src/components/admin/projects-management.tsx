@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Search, ExternalLink, Link, ChevronDown, ChevronUp, Star } from "lucide-react";
+import { projectsData } from "@/data/projects";
 
 interface ProjectItem {
   id: string;
@@ -20,35 +21,16 @@ interface ProjectItem {
 }
 
 export function ProjectsManagement() {
-  const [projects, setProjects] = useState<ProjectItem[]>([
-    {
-      id: "nexus-official-web",
-      slug: "nexus-official-web",
-      title: "NEXUS Digital Web Platform",
-      tagline: "High-performance institutional hub for innovation and leadership",
-      description: "The official web infrastructure of NEXUS club built with Next.js 16 App Router, TypeScript, and Tailwind CSS v4.",
-      category: "WEB",
-      techStack: ["Next.js 16", "React 19", "TypeScript", "Tailwind CSS v4"],
-      githubUrl: "https://github.com/nexus-rit/NEXUS",
-      liveUrl: "https://nexusrit.org",
-      contributors: [
-        { name: "Arslan Kokane", role: "Tech Director", github: "https://github.com/ArSlan-Kokane" },
-        { name: "Siddharth Pawar", role: "President" },
-      ],
-      featured: true,
-      completedYear: "2026",
-      highlights: [
-        "Dark-first institutional design language",
-        "Strictly typed data access layer",
-        "Sub-100ms server component response times",
-      ],
-    },
-  ]);
-
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Load actual project data
+    setProjects(projectsData);
+  }, []);
 
   const filteredProjects = projects.filter(project =>
     project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

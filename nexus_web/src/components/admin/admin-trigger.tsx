@@ -12,10 +12,13 @@ export function AdminTrigger({ onTrigger }: AdminTriggerProps) {
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       // Secret sequence: type "nexus" then press Enter
-      const newSequence = keySequence + event.key.toLowerCase();
+      if (!event || !event.key) return; // Safety check for undefined event or event.key
+      
+      const key = event.key.toLowerCase();
+      const newSequence = keySequence + key;
       
       // Check if Enter was pressed and the previous sequence was "nexus"
-      if (event.key === "Enter" && keySequence === "nexus") {
+      if (key === "enter" && keySequence === "nexus") {
         event.preventDefault();
         onTrigger();
         setKeySequence("");

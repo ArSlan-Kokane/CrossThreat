@@ -95,9 +95,9 @@ export function SettingsContent() {
                 <p className="text-sm text-gray-400">Auto-logout after inactivity</p>
               </div>
             </div>
-            <select className="bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[#4f9eff]">
+            <select defaultValue="30" className="bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[#4f9eff]">
               <option value="15">15 minutes</option>
-              <option value="30" selected>30 minutes</option>
+              <option value="30">30 minutes</option>
               <option value="60">1 hour</option>
               <option value="120">2 hours</option>
               <option value="0">Never</option>

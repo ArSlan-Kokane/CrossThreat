@@ -126,6 +126,32 @@ export function PersonalInfoStep({ data, onChange, errors }: PersonalInfoStepPro
             <p className="text-red-400 text-sm mt-1">{errors.studentId}</p>
           )}
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            City (Optional)
+          </label>
+          <input
+            type="text"
+            value={data.city || ""}
+            onChange={(e) => handleChange('city', e.target.value)}
+            className="w-full bg-[#12121a] border border-[#1a1a2e] rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#4f9eff] transition-colors"
+            placeholder="Your city"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            State (Optional)
+          </label>
+          <input
+            type="text"
+            value={data.state || ""}
+            onChange={(e) => handleChange('state', e.target.value)}
+            className="w-full bg-[#12121a] border border-[#1a1a2e] rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#4f9eff] transition-colors"
+            placeholder="Your state"
+          />
+        </div>
       </div>
 
       <div className="bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg p-4">

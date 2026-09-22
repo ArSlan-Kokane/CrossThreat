@@ -30,26 +30,35 @@ export function RecruitmentForm() {
       year: "1st",
       branch: "",
       studentId: "",
+      city: "",
+      state: "",
     },
     departmentInterest: {
       firstChoice: "TECHNOLOGY",
       secondChoice: "MEDIA_AND_MARKETING",
       reason: "",
+      relevantExperience: "",
     },
     skills: {
       technicalSkills: [],
       experience: "",
       projects: "",
+      otherSkills: "",
+      certifications: "",
     },
     responses: {
       whyJoin: "",
       contribution: "",
       timeCommitment: "",
+      otherActivities: "",
+      challenges: "",
+      goals: "",
     },
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedApplicationId, setSubmittedApplicationId] = useState<string>("");
   const [hasSavedData, setHasSavedData] = useState(false);
 
   const currentStepIndex = STEPS.findIndex(step => step.id === currentStep);
@@ -88,21 +97,29 @@ export function RecruitmentForm() {
         year: "1st",
         branch: "",
         studentId: "",
+        city: "",
+        state: "",
       },
       departmentInterest: {
         firstChoice: "TECHNOLOGY",
         secondChoice: "MEDIA_AND_MARKETING",
         reason: "",
+        relevantExperience: "",
       },
       skills: {
         technicalSkills: [],
         experience: "",
         projects: "",
+        otherSkills: "",
+        certifications: "",
       },
       responses: {
         whyJoin: "",
         contribution: "",
         timeCommitment: "",
+        otherActivities: "",
+        challenges: "",
+        goals: "",
       },
     });
   };
@@ -191,6 +208,7 @@ export function RecruitmentForm() {
       const result = await response.json();
 
       if (response.ok) {
+        setSubmittedApplicationId(result.applicationId);
         setIsSubmitted(true);
         // Clear saved data after successful submission
         clearSavedData();
@@ -215,13 +233,23 @@ export function RecruitmentForm() {
           <p className="text-gray-400 mb-6">
             Thank you for your interest in joining NEXUS. We have received your application and will review it shortly.
           </p>
-          <div className="bg-[#12121a] border border-[#1a1a2e] rounded-lg p-4 text-left">
+          <div className="bg-[#12121a] border border-[#1a1a2e] rounded-lg p-4 text-left mb-4">
             <p className="text-sm text-gray-400 mb-2">Application ID:</p>
+            <p className="text-white font-mono text-lg">{submittedApplicationId}</p>
+          </div>
+          <div className="bg-[#12121a] border border-[#1a1a2e] rounded-lg p-4 text-left mb-6">
+            <p className="text-sm text-gray-400 mb-2">Email:</p>
             <p className="text-white font-mono">{formData.personalInfo?.email}</p>
+          </div>
+          <div className="bg-[#1a1a2e] border border-[#2a2a3e] rounded-lg p-4 text-left mb-6">
+            <p className="text-sm text-gray-400">
+              <span className="text-[#4f9eff] font-medium">Important:</span> Please save your Application ID for future reference. 
+              You can use it to track your application status.
+            </p>
           </div>
           <button
             onClick={() => window.location.href = '/'}
-            className="mt-6 bg-[#4f9eff] hover:bg-[#3a8aee] text-white px-6 py-3 rounded-lg transition-colors"
+            className="mt-2 bg-[#4f9eff] hover:bg-[#3a8aee] text-white px-6 py-3 rounded-lg transition-colors"
           >
             Return to Home
           </button>

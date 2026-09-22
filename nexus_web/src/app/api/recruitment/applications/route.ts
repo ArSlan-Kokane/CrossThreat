@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllApplications, getApplicationStats } from '@/lib/recruitment/storage';
+import { getAllApplicationsDB, getApplicationStatsDB, getApplicationsByStatusDB, getApplicationsByDepartmentDB, searchApplicationsDB } from '@/lib/recruitment/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,39 +11,22 @@ export async function GET(request: NextRequest) {
     
     // Return statistics if requested
     if (stats === 'true') {
-      const statistics = await getApplicationStats();
+      const statistics = getApplicationStatsDB();
       return NextResponse.json(statistics);
     }
     
-    let applications = await getAllApplications();
+    let applications;
     
-    // Filter by status if provided
+    // Use specific queries for better performance
     if (status) {
-      applications = applications.filter(app => app.status === status);
+      applications = getApplicationsByStatusDB(status as any);
+    } else if (department) {
+      applications = getApplicationsByDepartmentDB(department);
+    } else if (search) {
+      applications = searchApplicationsDB(search);
+    } else {
+      applications = getAllApplicationsDB();
     }
-    
-    // Filter by department if provided
-    if (department) {
-      applications = applications.filter(app =>
-        app.departmentInterest.firstChoice === department ||
-        app.departmentInterest.secondChoice === department ||
-        app.departmentInterest.thirdChoice === department
-      );
-    }
-    
-    // Search if query provided
-    if (search) {
-      const lowerQuery = search.toLowerCase();
-      applications = applications.filter(app =>
-        app.personalInfo.fullName.toLowerCase().includes(lowerQuery) ||
-        app.personalInfo.email.toLowerCase().includes(lowerQuery)
-      );
-    }
-    
-    // Sort by submission date (newest first)
-    applications.sort((a, b) => 
-      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-    );
     
     return NextResponse.json(applications);
   } catch (error) {

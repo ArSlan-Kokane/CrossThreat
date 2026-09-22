@@ -136,6 +136,19 @@ export function DepartmentStep({ data, onChange, errors }: DepartmentStepProps) 
         </div>
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Relevant Experience (Optional)
+        </label>
+        <textarea
+          value={data.relevantExperience || ""}
+          onChange={(e) => handleChange('relevantExperience', e.target.value)}
+          rows={3}
+          className="w-full bg-[#12121a] border border-[#1a1a2e] rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#4f9eff] transition-colors resize-none"
+          placeholder="Any specific experience relevant to your chosen departments..."
+        />
+      </div>
+
       {/* Department Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {DEPARTMENTS.map((dept) => (

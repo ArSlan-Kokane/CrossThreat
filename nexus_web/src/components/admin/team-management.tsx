@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { teamMembers } from "@/data/team";
 
 interface TeamMember {
   id: string;
@@ -22,45 +23,16 @@ interface TeamMember {
 }
 
 export function TeamManagement() {
-  const [members, setMembers] = useState<TeamMember[]>([
-    {
-      id: "siddharth-pawar",
-      name: "Siddharth Pawar",
-      role: "President",
-      department: "ADMINISTRATION",
-      bio: "Guiding the strategic direction, culture, and high-impact initiatives of NEXUS across Rajarambapu Institute of Technology.",
-      responsibilities: "Executive leadership, club governance, and institutional representation.",
-      avatarUrl: "",
-      socials: {
-        linkedin: "https://linkedin.com",
-        github: "https://github.com",
-      },
-      tenure: "2025 - Present",
-      isCoreLead: true,
-      order: 1,
-    },
-    {
-      id: "arslan-kokane",
-      name: "Arslan Kokane",
-      role: "Tech Director",
-      department: "TECHNOLOGY",
-      bio: "Overseeing digital platforms, architectural standards, open-source software engineering, and technical mentorship.",
-      responsibilities: "Technical infrastructure, website architecture, and engineering mentorship.",
-      avatarUrl: "",
-      socials: {
-        linkedin: "https://linkedin.com",
-        github: "https://github.com",
-      },
-      tenure: "2025 - Present",
-      isCoreLead: true,
-      order: 2,
-    },
-  ]);
-
+  const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Load actual team data
+    setMembers(teamMembers);
+  }, []);
 
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

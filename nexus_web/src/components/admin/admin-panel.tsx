@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { X, LayoutDashboard, Users, FolderKanban, Calendar, FileText, Settings, LogOut, Menu, UserPlus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, LayoutDashboard, Users, FolderKanban, Calendar, FileText, Settings, LogOut, Menu, UserPlus, UsersRound, Rocket, CalendarPlus, Download, Settings2 } from "lucide-react";
 import { TeamManagement } from "./team-management";
 import { ProjectsManagement } from "./projects-management";
 import { EventsManagement } from "./events-management";
 import { ContentManagement } from "./content-management";
 import { SettingsContent } from "./settings-content";
 import { RecruitmentManagement } from "./recruitment-management";
+import { teamMembers } from "@/data/team";
+import { projectsData } from "@/data/projects";
 
 interface AdminPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type AdminSection = "dashboard" | "team" | "projects" | "events" | "content" | "settings";
+type AdminSection = "dashboard" | "team" | "recruitment" | "projects" | "events" | "content" | "settings";
 
 export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
@@ -99,7 +101,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-6">
-          {activeSection === "dashboard" && <DashboardContent />}
+          {activeSection === "dashboard" && <DashboardContent setActiveSection={setActiveSection} />}
           {activeSection === "team" && <TeamManagement />}
           {activeSection === "recruitment" && <RecruitmentManagement />}
           {activeSection === "projects" && <ProjectsManagement />}
@@ -113,14 +115,42 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 }
 
 // Dashboard Content Component
-function DashboardContent() {
+function DashboardContent({ setActiveSection }: { setActiveSection: (section: AdminSection) => void }) {
+  const [stats, setStats] = useState({
+    teamMembers: teamMembers.length,
+    activeProjects: projectsData.length,
+    applications: 0,
+    departments: 5
+  });
+
+  useEffect(() => {
+    // Fetch real statistics
+    const fetchStats = async () => {
+      try {
+        // Fetch application statistics
+        const appResponse = await fetch('/api/recruitment/applications?stats=true');
+        if (appResponse.ok) {
+          const appStats = await appResponse.json();
+          setStats(prev => ({
+            ...prev,
+            applications: appStats.total || 0
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Team Members" value="5" change="Core Leadership" />
-        <StatCard title="Active Projects" value="3" change="Featured Projects" />
-        <StatCard title="Recruitment" value="Active" change="New Applications" />
-        <StatCard title="Departments" value="5" change="Full Organization" />
+        <StatCard title="Team Members" value={stats.teamMembers.toString()} change="Core Leadership" />
+        <StatCard title="Active Projects" value={stats.activeProjects.toString()} change="Featured Projects" />
+        <StatCard title="Applications" value={stats.applications.toString()} change="Total Applications" />
+        <StatCard title="Departments" value={stats.departments.toString()} change="Full Organization" />
       </div>
 
       <div className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-lg p-6">
@@ -129,32 +159,38 @@ function DashboardContent() {
           <QuickActionButton 
             title="View Applications" 
             description="Review recruitment applications"
-            icon="�"
+            icon={<UsersRound size={24} />}
+            onClick={() => setActiveSection('recruitment')}
           />
           <QuickActionButton 
             title="Add Team Member" 
             description="Add new team member to organization"
-            icon="�"
+            icon={<Users size={24} />}
+            onClick={() => setActiveSection('team')}
           />
           <QuickActionButton 
             title="Create Project" 
             description="Add new project to portfolio"
-            icon="�"
+            icon={<Rocket size={24} />}
+            onClick={() => setActiveSection('projects')}
           />
           <QuickActionButton 
             title="Schedule Event" 
             description="Create new event or hackathon"
-            icon="�"
+            icon={<CalendarPlus size={24} />}
+            onClick={() => setActiveSection('events')}
           />
           <QuickActionButton 
             title="Export Data" 
             description="Download all website data"
-            icon="�"
+            icon={<Download size={24} />}
+            onClick={() => console.log('Export functionality')}
           />
           <QuickActionButton 
-            title="System Status" 
+            title="System Settings" 
             description="Check system health"
-            icon="🔧"
+            icon={<Settings2 size={24} />}
+            onClick={() => setActiveSection('settings')}
           />
         </div>
       </div>
@@ -223,10 +259,10 @@ function ActivityItem({ action, target, time }: { action: string; target: string
   );
 }
 
-function QuickActionButton({ title, description, icon }: { title: string; description: string; icon: string }) {
+function QuickActionButton({ title, description, icon, onClick }: { title: string; description: string; icon: React.ReactNode; onClick?: () => void }) {
   return (
-    <button className="p-4 bg-[#12121a] border border-[#1a1a2e] rounded-lg hover:border-[#4f9eff] transition-colors text-left">
-      <div className="text-2xl mb-2">{icon}</div>
+    <button onClick={onClick} className="p-4 bg-[#12121a] border border-[#1a1a2e] rounded-lg hover:border-[#4f9eff] transition-colors text-left">
+      <div className="text-[#4f9eff] mb-2">{icon}</div>
       <h4 className="text-white font-medium">{title}</h4>
       <p className="text-sm text-gray-400 mt-1">{description}</p>
     </button>

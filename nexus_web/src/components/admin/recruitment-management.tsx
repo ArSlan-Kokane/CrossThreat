@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Download, Eye, Edit, Trash2, Calendar, User, Mail, Phone, Building, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Filter, Download, Eye, Edit, Trash2, Calendar, User, Mail, Phone, Building, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, X } from "lucide-react";
 import { ApplicationStatus } from "@/lib/recruitment/schema";
 
 interface RecruitmentApplication {
@@ -15,12 +15,15 @@ interface RecruitmentApplication {
     year: string;
     branch: string;
     studentId: string;
+    city?: string;
+    state?: string;
   };
   departmentInterest: {
     firstChoice: string;
     secondChoice: string;
     thirdChoice?: string;
     reason: string;
+    relevantExperience?: string;
   };
   skills: {
     technicalSkills: string[];
@@ -29,12 +32,16 @@ interface RecruitmentApplication {
     portfolioUrl?: string;
     githubUrl?: string;
     linkedinUrl?: string;
+    otherSkills?: string;
+    certifications?: string;
   };
   responses: {
     whyJoin: string;
     contribution: string;
     timeCommitment: string;
     otherActivities?: string;
+    challenges?: string;
+    goals?: string;
   };
   adminNotes?: string;
 }
@@ -76,6 +83,9 @@ export function RecruitmentManagement() {
   const fetchApplications = async () => {
     try {
       const response = await fetch('/api/recruitment/applications');
+      if (!response.ok) {
+        throw new Error('Failed to fetch applications');
+      }
       const data = await response.json();
       setApplications(data);
       setIsLoading(false);
@@ -125,6 +135,8 @@ export function RecruitmentManagement() {
 
       if (response.ok) {
         fetchApplications(); // Refresh the list
+      } else {
+        console.error('Failed to update status');
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -141,6 +153,9 @@ export function RecruitmentManagement() {
 
       if (response.ok) {
         fetchApplications(); // Refresh the list
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to delete application:', errorData.error);
       }
     } catch (error) {
       console.error('Error deleting application:', error);
@@ -408,6 +423,9 @@ function ApplicationDetailModal({
 
       if (response.ok) {
         onClose();
+        fetchApplications(); // Refresh the list
+      } else {
+        console.error('Failed to save notes');
       }
     } catch (error) {
       console.error('Error saving notes:', error);
@@ -456,6 +474,12 @@ function ApplicationDetailModal({
                 <p className="text-sm text-gray-400">Branch</p>
                 <p className="text-white">{application.personalInfo.branch}</p>
               </div>
+              {(application.personalInfo.city || application.personalInfo.state) && (
+                <div className="md:col-span-2">
+                  <p className="text-sm text-gray-400">Location</p>
+                  <p className="text-white">{application.personalInfo.city}{application.personalInfo.city && application.personalInfo.state && ', '}{application.personalInfo.state}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -528,6 +552,18 @@ function ApplicationDetailModal({
                   </div>
                 </div>
               )}
+              {application.skills.otherSkills && (
+                <div>
+                  <p className="text-sm text-gray-400">Other Skills</p>
+                  <p className="text-white text-sm">{application.skills.otherSkills}</p>
+                </div>
+              )}
+              {application.skills.certifications && (
+                <div>
+                  <p className="text-sm text-gray-400">Certifications</p>
+                  <p className="text-white text-sm">{application.skills.certifications}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -551,6 +587,18 @@ function ApplicationDetailModal({
                 <div>
                   <p className="text-sm text-gray-400">Other Activities</p>
                   <p className="text-white">{application.responses.otherActivities}</p>
+                </div>
+              )}
+              {application.responses.challenges && (
+                <div>
+                  <p className="text-sm text-gray-400">Challenges Overcome</p>
+                  <p className="text-white">{application.responses.challenges}</p>
+                </div>
+              )}
+              {application.responses.goals && (
+                <div>
+                  <p className="text-sm text-gray-400">Goals</p>
+                  <p className="text-white">{application.responses.goals}</p>
                 </div>
               )}
             </div>

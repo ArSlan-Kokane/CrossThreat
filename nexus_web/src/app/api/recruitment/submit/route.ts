@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createApplication } from '@/lib/recruitment/storage';
+import { createApplicationDB } from '@/lib/recruitment/database';
 import { validateFormData, sanitizeFormData } from '@/lib/recruitment/validation';
 import { RecruitmentFormData } from '@/lib/recruitment/schema';
 
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
     // Sanitize input
     const sanitizedData = sanitizeFormData(body as RecruitmentFormData);
     
-    // Create application
-    const application = await createApplication(sanitizedData);
+    // Create application using SQLite database
+    const application = createApplicationDB(sanitizedData);
     
     return NextResponse.json(
       { 

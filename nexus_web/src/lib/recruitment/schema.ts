@@ -33,6 +33,8 @@ export interface PersonalInfo {
   year: StudentYear;
   branch: string;
   studentId: string;
+  city?: string;
+  state?: string;
 }
 
 export type StudentYear = '1st' | '2nd' | '3rd' | '4th';
@@ -42,6 +44,7 @@ export interface DepartmentInterest {
   secondChoice: Department;
   thirdChoice?: Department;
   reason: string;
+  relevantExperience?: string;
 }
 
 export type Department = 'ADMINISTRATION' | 'TECHNOLOGY' | 'MEDIA_AND_MARKETING' | 'OPERATIONS' | 'PARTNERSHIPS';
@@ -53,6 +56,8 @@ export interface SkillsInfo {
   portfolioUrl?: string;
   githubUrl?: string;
   linkedinUrl?: string;
+  otherSkills?: string;
+  certifications?: string;
 }
 
 export interface QuestionResponses {
@@ -60,6 +65,8 @@ export interface QuestionResponses {
   contribution: string;
   timeCommitment: string;
   otherActivities?: string;
+  challenges?: string;
+  goals?: string;
 }
 
 // Form submission data (without admin fields)

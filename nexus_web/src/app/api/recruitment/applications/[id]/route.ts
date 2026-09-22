@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApplicationById, updateApplicationStatus, deleteApplication } from '@/lib/recruitment/storage';
+import { getApplicationByIdDB, updateApplicationStatusDB, deleteApplicationDB } from '@/lib/recruitment/database';
 import { ApplicationStatus } from '@/lib/recruitment/schema';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const application = await getApplicationById(params.id);
+    const { id } = await params;
+    const application = getApplicationByIdDB(id);
     
     if (!application) {
       return NextResponse.json(
@@ -28,9 +29,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { status, adminNotes } = body;
     
@@ -42,8 +44,8 @@ export async function PUT(
       );
     }
     
-    const updatedApplication = await updateApplicationStatus(
-      params.id,
+    const updatedApplication = updateApplicationStatusDB(
+      id,
       status as ApplicationStatus,
       adminNotes
     );
@@ -67,10 +69,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const deleted = await deleteApplication(params.id);
+    const { id } = await params;
+    const deleted = deleteApplicationDB(id);
     
     if (!deleted) {
       return NextResponse.json(
