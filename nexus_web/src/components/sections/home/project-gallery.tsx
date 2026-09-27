@@ -5,7 +5,7 @@ import { Container } from "@/components/ui/container";
 import { BlueLine } from "@/components/ui/blue-line";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { ProjectItem } from "@/types";
-import { ArrowRight, ArrowUpRight, Code2, Terminal } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Code2, Terminal, Activity, Lock, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -75,7 +75,7 @@ export function ProjectGallery({ projects }: ProjectGalleryProps) {
             animate={isGridVisible ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            {projects.slice(0, 3).map((project, index) => {
+            {projects.slice(0, 1).map((project, index) => {
               const projectNumber = `PROJECT ${String(index + 1).padStart(3, "0")}`;
               const isExpanded = expandedProject === project.id;
 
@@ -181,6 +181,142 @@ export function ProjectGallery({ projects }: ProjectGalleryProps) {
                 </motion.div>
               );
             })}
+          </motion.div>
+
+          {/* Working Under The Hood Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isGridVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="p-8 sm:p-10 rounded-2xl border border-[#1c1c27] bg-[#09090e] relative overflow-hidden"
+          >
+            <div className="absolute inset-0 opacity-10">
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20"
+                animate={{
+                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                style={{
+                  backgroundSize: "200% 200%",
+                }}
+              />
+            </div>
+            
+            <div className="relative z-10 flex items-center gap-6">
+              <div className="flex-shrink-0">
+                <motion.div
+                  animate={{
+                    rotate: [0, 360],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  className="w-16 h-16 rounded-full bg-[#1a1a2e] border border-blue-500/30 flex items-center justify-center"
+                >
+                  <Activity className="w-8 h-8 text-blue-400" />
+                </motion.div>
+              </div>
+              
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-bold text-white uppercase tracking-tight">
+                    Working Under The Hood
+                  </h3>
+                  <motion.div
+                    animate={{
+                      opacity: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="w-2 h-2 rounded-full bg-green-400"
+                  />
+                </div>
+                <p className="text-sm text-zinc-400">
+                  Engineering excellence in progress. Building the future infrastructure.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Secret Working Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isGridVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="p-8 sm:p-10 rounded-2xl border border-[#1c1c27] bg-[#09090e] relative overflow-hidden"
+          >
+            <div className="absolute inset-0 opacity-5">
+              <motion.div
+                className="absolute inset-0"
+                animate={{
+                  opacity: [0.1, 0.3, 0.1],
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-purple-500/20" />
+              </motion.div>
+            </div>
+            
+            <div className="relative z-10 flex items-center gap-6">
+              <div className="flex-shrink-0">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="w-16 h-16 rounded-full bg-[#1a1a2e] border border-purple-500/30 flex items-center justify-center"
+                >
+                  <Lock className="w-8 h-8 text-purple-400" />
+                </motion.div>
+              </div>
+              
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-bold text-white uppercase tracking-tight">
+                    Secret Operations
+                  </h3>
+                  <motion.div
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="flex items-center gap-1"
+                  >
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                    <Sparkles className="w-3 h-3 text-purple-400" />
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                  </motion.div>
+                </div>
+                <p className="text-sm text-zinc-400">
+                  Confidential projects under development. Access restricted to authorized personnel.
+                </p>
+              </div>
+            </div>
           </motion.div>
         </div>
       </Container>

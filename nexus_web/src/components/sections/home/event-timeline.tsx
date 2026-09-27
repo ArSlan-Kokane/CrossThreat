@@ -1,15 +1,13 @@
 "use client";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { BlueLine } from "@/components/ui/blue-line";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
-import { EventItem } from "@/types";
-import { ArrowRight, ArrowUpRight, Calendar, MapPin } from "lucide-react";
-import { motion, type Variants } from "framer-motion";
+import { ArrowRight, Calendar, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface EventTimelineProps {
-  events: EventItem[];
+  events: any[];
 }
 
 export function EventTimeline({ events }: EventTimelineProps) {
@@ -18,21 +16,9 @@ export function EventTimeline({ events }: EventTimelineProps) {
     isVisible: isHeaderVisible,
   } = useScrollReveal();
   const {
-    elementRef: timelineElementRef,
-    isVisible: isTimelineVisible,
+    elementRef: curtainElementRef,
+    isVisible: isCurtainVisible,
   } = useScrollReveal();
-
-  const pulseVariants: Variants = {
-    pulse: {
-      scale: [1, 1.1, 1],
-      opacity: [1, 0.8, 1],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
 
   return (
     <section className="py-24 bg-[#07070a] border-b border-[#1c1c27]">
@@ -66,95 +52,121 @@ export function EventTimeline({ events }: EventTimelineProps) {
             </Button>
           </motion.div>
 
-          {/* Chronological Timeline Layout */}
+          {/* Curtain Effect Section */}
           <motion.div
-            ref={timelineElementRef}
-            className="space-y-8 relative"
+            ref={curtainElementRef}
+            className="relative overflow-hidden rounded-2xl bg-[#09090e] border border-[#1c1c27]"
             initial={{ opacity: 0, y: 20 }}
-            animate={isTimelineVisible ? { opacity: 1, y: 0 } : {}}
+            animate={isCurtainVisible ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            {events.map((event, index) => {
-              const isUpcoming = event.status === "UPCOMING";
+            {/* Curtain Effect Background */}
+            <div className="absolute inset-0">
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/10 to-transparent"
+                animate={{
+                  y: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-t from-transparent via-purple-900/10 to-transparent"
+                animate={{
+                  y: ["100%", "-100%"],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+            </div>
 
-              return (
-                <motion.div
-                  key={event.id}
-                  className={`p-8 rounded-2xl border transition-all ${
-                    isUpcoming
-                      ? "bg-[#09090e] border-blue-900/40 hover:border-blue-700/60 shadow-[0_0_30px_rgba(59,130,246,0.05)]"
-                      : "bg-[#060608] border-[#1c1c27] opacity-80 hover:opacity-100"
-                  }`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={isTimelineVisible ? { opacity: 1, x: 0 } : {}}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
+            {/* Content */}
+            <div className="relative z-10 p-12 sm:p-16 text-center space-y-8">
+              {/* Animated Sparkles */}
+              <motion.div
+                className="flex justify-center gap-4"
+                animate={{
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <Sparkles className="w-8 h-8 text-blue-400" />
+                <Sparkles className="w-10 h-10 text-purple-400" />
+                <Sparkles className="w-8 h-8 text-blue-400" />
+              </motion.div>
+
+              {/* Main Message */}
+              <div className="space-y-4">
+                <motion.h3
+                  className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white uppercase"
+                  animate={{
+                    opacity: [0.7, 1, 0.7],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    {/* Left: Date & Status Node */}
-                    <div className="space-y-2 lg:w-1/4 shrink-0">
-                      <div className="flex items-center gap-2.5">
-                        {isUpcoming ? (
-                          <motion.span
-                            className="h-2.5 w-2.5 rounded-full bg-blue-400"
-                            variants={pulseVariants}
-                            animate="pulse"
-                          />
-                        ) : (
-                          <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />
-                        )}
-                        <Badge variant={isUpcoming ? "accent" : "default"}>
-                          {event.status}
-                        </Badge>
-                      </div>
-                      <div className="text-base font-mono font-bold text-white">
-                        {event.date}
-                      </div>
-                      <div className="text-xs font-mono text-zinc-500">
-                        {event.time}
-                      </div>
-                    </div>
+                  Many Plans Coming Ahead!
+                </motion.h3>
+                <p className="text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-2xl mx-auto">
+                  We're crafting unforgettable experiences. Stay tuned for upcoming workshops, hackathons, and events that will inspire and empower.
+                </p>
+              </div>
 
-                    {/* Center: Details */}
-                    <div className="space-y-2 lg:w-1/2">
-                      <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                        {event.title}
-                      </h3>
-                      <p className="text-xs font-mono text-blue-400">
-                        {event.tagline}
-                      </p>
-                      <p className="text-xs text-zinc-400 leading-relaxed pt-1">
-                        {event.description}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs font-mono text-zinc-500 pt-2">
-                        <MapPin className="h-3.5 w-3.5 text-zinc-400" />
-                        <span>{event.venue}</span>
-                      </div>
-                    </div>
-
-                    {/* Right: Registration / Archive CTA */}
-                    <div className="lg:w-1/4 flex flex-col items-start lg:items-end justify-center shrink-0">
-                      {event.isRegistrationOpen && event.registrationUrl ? (
-                        <a
-                          href={event.registrationUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full sm:w-auto"
-                        >
-                          <Button variant="primary" size="md" className="w-full text-xs font-mono h-10 px-6">
-                            <span>Register via Google</span>
-                            <ArrowUpRight className="h-3.5 w-3.5 ml-1.5" />
-                          </Button>
-                        </a>
-                      ) : (
-                        <span className="text-xs font-mono text-zinc-600 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800">
-                          Sprint Concluded
-                        </span>
-                      )}
-                    </div>
-                  </div>
+              {/* Decorative Elements */}
+              <div className="flex justify-center gap-8 text-xs font-mono text-zinc-600">
+                <motion.div
+                  animate={{
+                    opacity: [0.3, 0.7, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  WORKSHOPS IN PLANNING
                 </motion.div>
-              );
-            })}
+                <motion.div
+                  animate={{
+                    opacity: [0.3, 0.7, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.5,
+                  }}
+                >
+                  HACKATHONS IN DEVELOPMENT
+                </motion.div>
+                <motion.div
+                  animate={{
+                    opacity: [0.3, 0.7, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1,
+                  }}
+                >
+                  KEYNOTES IN PREPARATION
+                </motion.div>
+              </div>
+            </div>
           </motion.div>
         </div>
       </Container>

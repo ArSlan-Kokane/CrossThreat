@@ -135,14 +135,17 @@ export default function ContactPage() {
                         Media Channels Launching with Spring Cohort
                       </span>
                     ) : (
-                      <a
+                      <Button
+                        variant="primary"
+                        size="sm"
                         href={siteConfig.contact.instagram}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-mono text-purple-400 hover:underline"
+                        className="w-full text-xs font-mono bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
                       >
-                        Follow on Instagram
-                      </a>
+                        <span>Follow on Instagram</span>
+                        <ArrowUpRight className="h-3 w-3 ml-1.5" />
+                      </Button>
                     )}
                   </div>
                 </div>

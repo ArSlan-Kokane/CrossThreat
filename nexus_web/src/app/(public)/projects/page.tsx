@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { getProjects } from "@/lib/data";
-import { ArrowUpRight, Code2, Sparkles, Terminal, Users } from "lucide-react";
+import { ArrowUpRight, Code2, Sparkles, Terminal, Users, Activity, Lock } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function ProjectsPage() {
   const projects = await getProjects();
-  const [flagship, ...otherProjects] = projects;
+  const [flagship] = projects;
 
   return (
     <div className="flex flex-col w-full py-12 md:py-20 space-y-16">
@@ -34,13 +34,13 @@ export default async function ProjectsPage() {
           </div>
 
           <div className="flex items-center gap-6 text-xs font-mono text-zinc-400 shrink-0">
-            <div className="p-3 rounded-xl bg-[#0a0a0f] border border-[#1c1c27] text-center min-w-[100px]">
+            <div className="p-3 rounded-xl bg-[#0a0a0f] border border-[#1c1a27] text-center min-w-[100px]">
               <div className="text-xl font-bold text-white">{projects.length}</div>
-              <div className="text-[10px] text-zinc-500 uppercase mt-0.5">Systems</div>
+              <div className="text-[10px] text-zinc-500 uppercase mt-0.5">Active Systems</div>
             </div>
-            <div className="p-3 rounded-xl bg-[#0a0a0f] border border-[#1c1c27] text-center min-w-[100px]">
-              <div className="text-xl font-bold text-blue-400">100%</div>
-              <div className="text-[10px] text-zinc-500 uppercase mt-0.5">Open Source</div>
+            <div className="p-3 rounded-xl bg-[#0a0a0f] border border-[#1c1a27] text-center min-w-[100px]">
+              <div className="text-xl font-bold text-blue-400">2</div>
+              <div className="text-[10px] text-zinc-500 uppercase mt-0.5">In Development</div>
             </div>
           </div>
         </div>
@@ -148,88 +148,71 @@ export default async function ProjectsPage() {
           </div>
         )}
 
-        {/* 3. Detailed Dossier Catalog */}
+        {/* 3. Working Under The Hood & Secret Operations */}
         <div className="mt-16 space-y-6">
           <div className="flex items-center justify-between border-b border-[#1c1c27] pb-4">
             <h3 className="text-sm font-mono uppercase tracking-widest text-zinc-400 font-bold">
-              Engineering Repositories ({otherProjects.length})
+              Active Development
             </h3>
-            <span className="text-xs font-mono text-zinc-600">PRODUCTION & INCUBATION</span>
+            <span className="text-xs font-mono text-zinc-600">ENGINEERING OPERATIONS</span>
           </div>
 
-          <div className="space-y-4">
-            {otherProjects.map((project, idx) => (
-              <div
-                key={project.id}
-                className="p-6 sm:p-8 rounded-2xl bg-[#08080c] border border-[#1c1c27] hover:border-zinc-700 hover:bg-[#0c0c12] transition-all space-y-4"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#14141c] pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-zinc-500 font-bold">
-                      DOSSIER 00{idx + 2}
-                    </span>
-                    <Badge variant="outline">{project.category.replace(/_/g, " ")}</Badge>
-                  </div>
-                  <div className="text-xs font-mono text-zinc-500">
-                    COMPLETED: {project.completedYear} • {project.contributors.length} CONTRIBUTORS
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  <div className="lg:col-span-8 space-y-2">
-                    <h4 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                      {project.title}
-                    </h4>
-                    <p className="text-xs font-mono text-blue-400">{project.tagline}</p>
-                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                      {project.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {project.techStack.map((tech) => (
-                        <span
-                          key={tech}
-                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#101016] text-zinc-400 border border-zinc-800"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between h-full gap-4">
-                    <div className="text-xs font-mono text-zinc-500 text-left lg:text-right">
-                      {project.contributors.map((c) => c.name).join(", ")}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {project.githubUrl && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          href={project.githubUrl}
-                          className="text-xs font-mono h-8"
-                        >
-                          <Code2 className="h-3 w-3 mr-1" />
-                          Code
-                        </Button>
-                      )}
-                      {project.liveUrl && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          href={project.liveUrl}
-                          className="text-xs font-mono h-8"
-                        >
-                          Live
-                          <ArrowUpRight className="h-3 w-3 ml-1" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Working Under The Hood */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-[#08080c] border border-[#1c1c27] relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 animate-pulse" />
               </div>
-            ))}
+              
+              <div className="relative z-10 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#1a1a2e] border border-blue-500/30 flex items-center justify-center">
+                    <Activity className="w-6 h-6 text-blue-400 animate-spin" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white uppercase tracking-tight">
+                      Working Under The Hood
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                      <span className="text-xs font-mono text-green-400">ACTIVE</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-zinc-400">
+                  Engineering excellence in progress. Building the future infrastructure and systems.
+                </p>
+              </div>
+            </div>
+
+            {/* Secret Operations */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-[#08080c] border border-[#1c1c27] relative overflow-hidden">
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-purple-500/20 animate-pulse" />
+              </div>
+              
+              <div className="relative z-10 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#1a1a2e] border border-purple-500/30 flex items-center justify-center">
+                    <Lock className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white uppercase tracking-tight">
+                      Secret Operations
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                      <span className="text-xs font-mono text-purple-400">CLASSIFIED</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-zinc-400">
+                  Confidential projects under development. Access restricted to authorized personnel.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </Container>

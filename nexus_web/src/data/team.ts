@@ -70,6 +70,7 @@ export const teamMembers: TeamMember[] = [
     socials: {
       linkedin: "https://linkedin.com",
       github: "https://github.com",
+      instagram: "https://www.instagram.com/nexus_rit",
     },
     tenure: "2025 - Present",
     isCoreLead: true,
@@ -86,6 +87,7 @@ export const teamMembers: TeamMember[] = [
     socials: {
       linkedin: "https://linkedin.com",
       github: "https://github.com",
+      instagram: "https://www.instagram.com/nexus_rit",
     },
     tenure: "2025 - Present",
     isCoreLead: true,
@@ -101,7 +103,7 @@ export const teamMembers: TeamMember[] = [
     avatarUrl: "",
     socials: {
       linkedin: "https://linkedin.com",
-      instagram: "https://instagram.com",
+      instagram: "https://www.instagram.com/nexus_rit",
     },
     tenure: "2025 - Present",
     isCoreLead: true,
@@ -121,14 +123,17 @@ export const teamMembers: TeamMember[] = [
     order: 4,
   },
   {
-    id: "partnerships-head-tbd",
-    name: "[Name TBD]",
+    id: "satyajeet-howale",
+    name: "Satyajeet Howale",
     role: "Partnership Head",
     department: "PARTNERSHIPS",
     bio: "Driving cross-organizational synergy, ecosystem partnerships, and bringing new ideas and hackathon opportunities to NEXUS.",
     responsibilities: "Collaboration with other clubs, opportunities, and bringing new ideas to NEXUS",
     avatarUrl: "",
-    socials: {},
+    socials: {
+      linkedin: "https://linkedin.com",
+      instagram: "https://www.instagram.com/nexus_rit",
+    },
     tenure: "2025 - Present",
     isCoreLead: true,
     order: 5,
